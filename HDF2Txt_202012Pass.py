@@ -153,20 +153,6 @@ if __name__ == '__main__':
         print(len(log_list))
         print('end processing:', datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'), time.time() - start_time)
 
-        #add by Tao 202012
-        logpath=path
-        for root, dirs, fiels in os.walk(logpath):
-            if 'systemlogs.logarchive' in root:
-                continue
-            try:
-                for each in fiels:
-                    if each.endswith('qdss.txt'):
-                        parseMsg(root + os.sep + each)
-
-            except Exception as e1:
-                print(e1)
-                print('Something wrong at parseing ' + root + os.sep + each)
-                continue
 
     
 
