@@ -44,3 +44,4 @@ if __name__ == '__main__':
         print "No dir inputed \n"
         os._exit(-1)
     read_json(log_dir)
+    print('1')
