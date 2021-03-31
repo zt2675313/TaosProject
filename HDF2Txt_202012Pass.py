@@ -14,40 +14,65 @@ def convert(file_name):
     print(file_name)
     command = '/Applications/Qualcomm/QCAT/QCAT.app/Contents/MacOS/QCAT -txt  -export -property="Timestamp Location":Local -property="Show Hex Dump":false -property="Use PC Time":false  -filter=' + filter_file + r' -outputdir='+output_dir + ' '+file_name
     os.system(command)
-
 def download_qsr4file(json_file):
+    
     fp = open(os.path.join(json_file)).read()
     data = json.loads(fp)
     BB_version = data.get('ABM Common Information')['Baseband Version']
-    print('Current BB_version', BB_version)
+    RadioType = data.get('ABM Common Information')['Radio Type']
     
     #connect to Shanghai Server to download qsr4 file 
-    ftpclient = FTP()
-    ftpclient.connect('17.88.51.123')
-    ftpclient.login('FTServer','Freedom')
+    try:
+        ftpclient = FTP()
+        ftpclient.connect('17.88.51.123', 2179)
+        ftpclient.login('FieldKit', 'autoupdate')
+    except:
+        print('UI_Display:Error found {}'.format((traceback.format_exc()).replace('\n', '\nUI_Display:')))
+
     
     filelist = []
-    ftpclient.cwd('BB_Release/Mav20_BB/Mav20-'+ BB_version)
-    ftpclient.retrlines('LIST', filelist.append)
-
-    for file_name in filelist:
-        if file_name.endswith('qsr4'):
-            qsr4_file = file_name.split(' ')[-1]
-            remote_file = ftpclient.pwd() + '/' + qsr4_file
-    
-    local_file = r'/Users/intern/Documents/QCAT/QShrink/' + qsr4_file
-
-    if os.path.exists(local_file):
-        pass
-    else:
-        print('Download BB_version', BB_version)
+    qsr4_file = ''
+    if RadioType == 'M20':
         try:
-            buf_size = 1024
-            file_handler = open(local_file, 'wb')
-            ftpclient.retrbinary('RETR %s' % remote_file, file_handler.write, buf_size)
-            file_handler.close()
+            ftpclient.cwd('BB_Release/Mav20_BB/Mav20-'+ BB_version)
+            ftpclient.retrlines('LIST', filelist.append)
+
+            for file_name in filelist:
+                if file_name.endswith('qsr4'):
+                    qsr4_file = file_name.split(' ')[-1]
+                    remote_file = ftpclient.pwd() + '/' + qsr4_file
         except Exception as err:
-            print(err)
+            print('UI_Display:Download MAV20 QSR4 Error', err)
+    
+    elif RadioType == 'M21':
+        try:
+            ftpclient.cwd('BB_Release/Mav21_BB/Mav21-'+ BB_version)
+            ftpclient.retrlines('LIST', filelist.append)
+            for file_name in filelist:
+                if file_name.endswith('qsr4'):
+                    qsr4_file = file_name.split(' ')[-1]
+                    remote_file = ftpclient.pwd() + '/' + qsr4_file
+        except Exception as err:
+            print('UI_Display:Download MAV21 QSR4 Error', err)
+
+    if len(qsr4_file) > 0:
+        local_file = os.path.expanduser('~') + '/Documents/QCAT/QShrink/' + qsr4_file
+        
+        if os.path.exists(local_file):
+            pass
+        else:
+            print('Download BB_version', BB_version)
+            try:
+                buf_size = 1024
+                file_handler = open(local_file, 'wb')
+                ftpclient.retrbinary('RETR %s' % remote_file, file_handler.write, buf_size)
+                file_handler.close()
+            except Exception as err:
+                print('UI_Display: Download QSR4 Error', err)
+
+
+
+
 #by Tao 202012
 def parseMsg(lfile):
     if os.path.isfile(lfile) == False:
@@ -126,11 +151,11 @@ if __name__ == '__main__':
                     full_path = os.path.abspath(os.path.join(root, f))
                     log_list.append(full_path)
         
-        for root, folders, files in os.walk(path):
-            for f in files:
-                if f.endswith('json'):
-                     json_file = root + '/' + f
-                     download_qsr4file(json_file)
+        #for root, folders, files in os.walk(path):
+        #    for f in files:
+        #        if 'log-bb' in f and f.endswith('json'):
+        #             json_file = root + '/' + f
+        #             download_qsr4file(json_file)
                      
         print(len(log_list))
         for file_name in log_list:

@@ -38,7 +38,7 @@ def parseMsg(lfile):
     for i, each in enumerate(contents):  # 得到所有以2020开头的行的index，消息的分割依据
         try:
             # print(each)
-            fm = re.match(r'2020.+(\d\d:\d\d:\d\d).+', each)
+            fm = re.match(r'202\d.+(\d\d:\d\d:\d\d).+', each)
             if fm:
                 tm = fm.group(1)
                 indexlist.append(i)
@@ -55,7 +55,7 @@ def parseMsg(lfile):
             title = contents[indexlist[j]]
             print(title)
             tt1 = datetime.datetime.now()
-            if title.startswith('2020') and len([x for x in LTENROta if x in title]) > 0 and 'Paging' not in title:  # LTE , NR ota message
+            if (title.startswith('2021') or title.startswith('2020')) and len([x for x in LTENROta if x in title]) > 0 and 'Paging' not in title:  # LTE , NR ota message
                 contlist = []
                 for k in range(indexlist[j], indexlist[j + 1]):  # indexlist[j] is line index in contents
                     contlist.append(contents[k])
@@ -88,7 +88,7 @@ if __name__ == '__main__':
             continue
         try:
             for each in fiels:
-                if each.endswith('qdss.txt'):
+                if each.endswith('qdss.txt') and not each.startswith('.') :
                     parseMsg(root + os.sep + each)
 
         except Exception as e1:
